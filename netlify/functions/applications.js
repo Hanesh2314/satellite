@@ -1,15 +1,9 @@
-/**
- * Improved Resume Handling for Netlify Functions
- * 
- * This script fixes the resume handling in the applications.js serverless function
- * to ensure that resume files can be properly uploaded and retrieved.
- */
+// applications.js - Serverless function for handling application data
 
-// applications.js with fixed resume handling
+// In-memory storage for applications
+const applications = [];
+
 exports.handler = async function(event, context) {
-  // In-memory storage for applications
-  let applications = [];
-
   // CORS headers for all responses
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -28,10 +22,16 @@ exports.handler = async function(event, context) {
 
   // GET: Retrieve all applications
   if (event.httpMethod === 'GET' && event.path === '/.netlify/functions/applications') {
+    // Return applications without the resume file content to reduce response size
+    const applicationsWithoutResumes = applications.map(app => {
+      const { resumeFileContent, ...appWithoutResume } = app;
+      return appWithoutResume;
+    });
+    
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(applications)
+      body: JSON.stringify(applicationsWithoutResumes)
     };
   }
   
