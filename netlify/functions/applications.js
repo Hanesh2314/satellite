@@ -1,10 +1,13 @@
-// applications.js - Serverless function for handling application data
+// Netlify serverless function for applications (Fixed ESM version)
 
 // In-memory storage for applications
-let applications = [];
+const applications = [];
 
-exports.handler = async function(event, context) {
-  console.log("Function invoked:", event.path, event.httpMethod);
+// Define the handler function using named export for ESM compatibility
+export const handler = async function(event, context) {
+  // Log all incoming requests for debugging
+  console.log('Function called with path:', event.path);
+  console.log('HTTP method:', event.httpMethod);
   
   // CORS headers for all responses
   const headers = {
@@ -15,7 +18,7 @@ exports.handler = async function(event, context) {
 
   // Handle OPTIONS request (CORS preflight)
   if (event.httpMethod === 'OPTIONS') {
-    console.log("Handling OPTIONS request");
+    console.log('Handling OPTIONS request');
     return {
       statusCode: 200,
       headers,
@@ -23,9 +26,27 @@ exports.handler = async function(event, context) {
     };
   }
 
+  // Add a test endpoint that always works
+  if (event.httpMethod === 'GET' && 
+      (event.path === '/.netlify/functions/applications/test' || 
+       event.path === '/api/applications/test')) {
+    console.log('Test endpoint called');
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ 
+        message: 'Applications API is working',
+        timestamp: new Date().toISOString(),
+        applicationsCount: applications.length
+      })
+    };
+  }
+
   // GET: Retrieve all applications
-  if (event.httpMethod === 'GET' && event.path === '/.netlify/functions/applications') {
-    console.log("Getting all applications, count:", applications.length);
+  if (event.httpMethod === 'GET' && 
+      (event.path === '/.netlify/functions/applications' || 
+       event.path === '/api/applications')) {
+    console.log('GET all applications, current count:', applications.length);
     
     // Return applications without the resume file content to reduce response size
     const applicationsWithoutResumes = applications.map(app => {
@@ -44,14 +65,20 @@ exports.handler = async function(event, context) {
   }
   
   // GET: Retrieve a specific application by ID
-  if (event.httpMethod === 'GET' && event.path.match(/\/.netlify\/functions\/applications\/\d+$/)) {
-    const id = parseInt(event.path.split('/').pop());
-    console.log("Getting application by ID:", id);
+  if (event.httpMethod === 'GET' && 
+      (event.path.match(//.netlify/functions/applications/\d+$/) || 
+       event.path.match(//api/applications/\d+$/))) {
+    
+    // Extract ID from path
+    const pathParts = event.path.split('/');
+    const id = parseInt(pathParts[pathParts.length - 1]);
+    
+    console.log('GET application by ID:', id);
     
     const application = applications.find(app => app.id === id);
     
     if (!application) {
-      console.log("Application not found:", id);
+      console.log('Application not found with ID:', id);
       return {
         statusCode: 404,
         headers,
@@ -73,15 +100,21 @@ exports.handler = async function(event, context) {
   }
   
   // GET: Retrieve a specific application's resume by ID
-  if (event.httpMethod === 'GET' && event.path.match(/\/.netlify\/functions\/applications\/\d+\/resume$/)) {
-    const id = parseInt(event.path.split('/').slice(-2, -1)[0]);
-    console.log("Getting resume for application ID:", id);
+  if (event.httpMethod === 'GET' && 
+      (event.path.match(//.netlify/functions/applications/\d+/resume$/) || 
+       event.path.match(//api/applications/\d+/resume$/))) {
+    
+    // Extract ID from path
+    const pathParts = event.path.split('/');
+    const id = parseInt(pathParts[pathParts.length - 2]);
+    
+    console.log('GET resume for application ID:', id);
     
     const application = applications.find(app => app.id === id);
     
     // Check if application exists and has resume content
     if (!application || !application.resumeFileContent) {
-      console.log("Resume not found for ID:", id);
+      console.log('Resume not found for application ID:', id);
       return {
         statusCode: 404,
         headers: {
@@ -110,9 +143,13 @@ exports.handler = async function(event, context) {
   }
   
   // POST: Create a new application
-  if (event.httpMethod === 'POST' && event.path === '/.netlify/functions/applications') {
+  if (event.httpMethod === 'POST' && 
+      (event.path === '/.netlify/functions/applications' || 
+       event.path === '/api/applications')) {
+    
+    console.log('POST new application');
+    
     try {
-      console.log("Creating new application");
       const data = JSON.parse(event.body);
       
       // Generate a unique ID
@@ -135,7 +172,7 @@ exports.handler = async function(event, context) {
         department: data.department,
         branch: data.branch,
         year: data.year,
-        experience: data.experience,
+        experience: data.experience || '',
         resumeFileName: data.resumeFileName || null,
         resumeFileContent: data.resumeFileContent || null,
         resumeFileType: data.resumeFileType || null,
@@ -144,7 +181,7 @@ exports.handler = async function(event, context) {
       
       // Add to our in-memory applications array
       applications.push(newApplication);
-      console.log("Added application:", id);
+      console.log('Application created with ID:', id);
       
       // Return the application without the resumeFileContent to reduce response size
       const { resumeFileContent, ...applicationWithoutResume } = newApplication;
@@ -168,22 +205,8 @@ exports.handler = async function(event, context) {
     }
   }
   
-  // Add a test endpoint to check if the function is responding
-  if (event.httpMethod === 'GET' && event.path === '/.netlify/functions/applications/test') {
-    console.log("Test endpoint called");
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        message: 'API is working',
-        timestamp: new Date().toISOString(),
-        applicationsCount: applications.length
-      })
-    };
-  }
-  
   // Fallback for unhandled routes
-  console.log("Unhandled route:", event.path);
+  console.log('Unhandled route:', event.path);
   return {
     statusCode: 404,
     headers,
