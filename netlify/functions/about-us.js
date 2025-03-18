@@ -1,86 +1,81 @@
-// Netlify Function for handling about-us API
-const { getAboutUs, updateAboutUs } = require('./lib/storage');
+// about-us.js - Serverless function for handling about-us content
 
-exports.handler = async (event, context) => {
-  // Set CORS headers
+// In-memory storage for about-us content (for demonstration purposes)
+let aboutUsContent = {
+  id: "about-us",
+  content: "SpaceTechHub is a cutting-edge space technology innovation hub dedicated to pushing the boundaries of space exploration and technology. Our mission is to develop innovative solutions for space exploration, satellite technology, and planetary science.",
+  updatedAt: new Date().toISOString()
+};
+
+exports.handler = async function(event, context) {
+  // CORS headers for all responses
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
   };
 
-  // Log request details for debugging
-  console.log('About-us function received request:', {
-    path: event.path,
-    httpMethod: event.httpMethod
-  });
-
   // Handle OPTIONS request (CORS preflight)
   if (event.httpMethod === 'OPTIONS') {
     return {
-      statusCode: 204,
-      headers
+      statusCode: 200,
+      headers,
+      body: ''
     };
   }
 
-  try {
-    // GET /api/about-us - Return about us content
-    if (event.httpMethod === 'GET' && (event.path === '/.netlify/functions/about-us' || event.path === '/api/about-us')) {
-      const aboutUs = await getAboutUs();
-      
-      if (!aboutUs) {
-        return {
-          statusCode: 404,
-          headers,
-          body: JSON.stringify({ error: 'About us content not found' })
-        };
-      }
-      
-      return {
-        statusCode: 200,
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify(aboutUs)
-      };
-    }
-    
-    // POST /api/about-us - Update about us content
-    if (event.httpMethod === 'POST' && (event.path === '/.netlify/functions/about-us' || event.path === '/api/about-us')) {
-      console.log("Received about-us update");
-      
+  // GET: Retrieve about-us content
+  if (event.httpMethod === 'GET') {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(aboutUsContent)
+    };
+  }
+  
+  // POST: Update about-us content
+  if (event.httpMethod === 'POST') {
+    try {
       const data = JSON.parse(event.body);
       
-      // Basic validation
-      if (!data.content) {
+      if (!data.content || typeof data.content !== 'string') {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: 'Missing content field' })
+          body: JSON.stringify({ error: 'Content is required and must be a string' })
         };
       }
       
-      const updatedAboutUs = await updateAboutUs(data.content);
+      // Update the about-us content
+      aboutUsContent = {
+        id: "about-us",
+        content: data.content,
+        updatedAt: new Date().toISOString()
+      };
       
       return {
         statusCode: 200,
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedAboutUs)
+        headers,
+        body: JSON.stringify(aboutUsContent)
+      };
+    } catch (error) {
+      console.error('Error updating about-us content:', error);
+      
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Invalid request data',
+          details: error.message
+        })
       };
     }
-    
-    // Route not found
-    return {
-      statusCode: 404,
-      headers,
-      body: JSON.stringify({ error: 'Not found' })
-    };
-    
-  } catch (error) {
-    console.error('Error in about-us function:', error);
-    
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Internal server error', details: error.message })
-    };
   }
+  
+  // Fallback for unhandled routes
+  return {
+    statusCode: 404,
+    headers,
+    body: JSON.stringify({ error: 'Not found' })
+  };
 };
