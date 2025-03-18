@@ -33,7 +33,7 @@ const formSchema = z.object({
   resumeFileName: z.string().optional()
 });
 
-// ThankYouPopup Component with explicit types
+// ThankYouPopup Component with explicit types and white background
 interface ThankYouPopupProps {
   isOpen: boolean;
   onClose: () => void;
@@ -77,26 +77,26 @@ const ThankYouPopup: React.FC<ThankYouPopupProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md bg-white text-black">
+        <DialogHeader className="bg-white text-black">
           <div className="flex justify-center mb-4">
-            <CheckCircle className="h-16 w-16 text-success" />
+            <CheckCircle className="h-16 w-16 text-green-500" />
           </div>
-          <DialogTitle className="text-xl text-center">Application Submitted!</DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogTitle className="text-xl text-center text-black">Application Submitted!</DialogTitle>
+          <DialogDescription className="text-center text-gray-700">
             Thank you for your interest in SpaceTechHub. Your application has been
             received and is being processed.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4 text-center">
-          <p>We appreciate your interest in joining our team.</p>
-          <p>You will be contacted if your profile matches our requirements.</p>
-          <p className="text-sm text-muted-foreground">
+        <div className="space-y-4 py-4 text-center bg-white">
+          <p className="text-gray-800">We appreciate your interest in joining our team.</p>
+          <p className="text-gray-800">You will be contacted if your profile matches our requirements.</p>
+          <p className="text-sm text-gray-500">
             Redirecting to home page in {timeLeft} seconds...
           </p>
         </div>
-        <DialogFooter>
-          <Button onClick={handleGoHome} className="w-full">
+        <DialogFooter className="bg-white">
+          <Button onClick={handleGoHome} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
             Return to Home Page
           </Button>
         </DialogFooter>
@@ -385,7 +385,7 @@ const ApplicationFormPage = () => {
         </Form>
       </div>
       
-      {/* Thank You Popup */}
+      {/* Thank You Popup with white background */}
       <ThankYouPopup 
         isOpen={showThankYou} 
         onClose={handleCloseThankYou} 
