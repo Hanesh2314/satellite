@@ -26,25 +26,26 @@ exports.handler = async (event, context) => {
   try {
     // GET /api/about-us - Return about us content
     if (event.httpMethod === 'GET' && (event.path === '/.netlify/functions/about-us' || event.path === '/api/about-us')) {
-      // Return test data for debugging
-      const aboutData = {
-        id: "about-us",
-        content: "Welcome to SpaceTechHub, a center for space technology innovation and research. Our mission is to advance humanity's presence in space through cutting-edge engineering, scientific research, and international collaboration.",
-        updatedAt: new Date().toISOString()
-      };
+      const aboutUs = await getAboutUs();
       
-      console.log("Returning about-us data:", aboutData);
+      if (!aboutUs) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'About us content not found' })
+        };
+      }
       
       return {
         statusCode: 200,
         headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify(aboutData)
+        body: JSON.stringify(aboutUs)
       };
     }
     
     // POST /api/about-us - Update about us content
     if (event.httpMethod === 'POST' && (event.path === '/.netlify/functions/about-us' || event.path === '/api/about-us')) {
-      console.log("Received about-us update:", event.body);
+      console.log("Received about-us update");
       
       const data = JSON.parse(event.body);
       
@@ -57,15 +58,12 @@ exports.handler = async (event, context) => {
         };
       }
       
-      // For debugging, just acknowledge the update
+      const updatedAboutUs = await updateAboutUs(data.content);
+      
       return {
         statusCode: 200,
         headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: "about-us",
-          content: data.content,
-          updatedAt: new Date().toISOString()
-        })
+        body: JSON.stringify(updatedAboutUs)
       };
     }
     
