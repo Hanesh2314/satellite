@@ -1,9 +1,15 @@
-// applications.js - Serverless function for handling application data
+/**
+ * Improved Resume Handling for Netlify Functions
+ * 
+ * This script fixes the resume handling in the applications.js serverless function
+ * to ensure that resume files can be properly uploaded and retrieved.
+ */
 
-// In-memory storage for applications (for demonstration purposes)
-let applications = [];
-
+// applications.js with fixed resume handling
 exports.handler = async function(event, context) {
+  // In-memory storage for applications
+  let applications = [];
+
   // CORS headers for all responses
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -42,10 +48,13 @@ exports.handler = async function(event, context) {
       };
     }
     
+    // Return the application without the resume file content to reduce response size
+    const { resumeFileContent, ...applicationWithoutResume } = application;
+    
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(application)
+      body: JSON.stringify(applicationWithoutResume)
     };
   }
   
@@ -54,6 +63,7 @@ exports.handler = async function(event, context) {
     const id = parseInt(event.path.split('/').slice(-2, -1)[0]);
     const application = applications.find(app => app.id === id);
     
+    // Check if application exists and has resume content
     if (!application || !application.resumeFileContent) {
       return {
         statusCode: 404,
@@ -65,12 +75,16 @@ exports.handler = async function(event, context) {
       };
     }
     
+    console.log('Serving resume for application:', id);
+    console.log('Resume file name:', application.resumeFileName);
+    console.log('Resume file type:', application.resumeFileType);
+    
     // Return the resume file as base64-encoded data
     return {
       statusCode: 200,
       headers: {
         ...headers,
-        'Content-Type': application.resumeFileType || 'application/octet-stream',
+        'Content-Type': application.resumeFileType || 'application/pdf',
         'Content-Disposition': `attachment; filename="${application.resumeFileName}"`
       },
       body: application.resumeFileContent,
@@ -83,10 +97,17 @@ exports.handler = async function(event, context) {
     try {
       const data = JSON.parse(event.body);
       
-      // Generate a unique ID (in a real app, this would be handled by the database)
+      // Generate a unique ID
       const id = applications.length > 0 
         ? Math.max(...applications.map(app => app.id)) + 1 
         : 1;
+      
+      // Log the resume file info for debugging
+      if (data.resumeFileName) {
+        console.log('Resume file received:', data.resumeFileName);
+        console.log('Resume file type:', data.resumeFileType);
+        console.log('Resume content length:', data.resumeFileContent?.length || 0);
+      }
       
       // Create the new application with current timestamp
       const newApplication = {
@@ -106,10 +127,13 @@ exports.handler = async function(event, context) {
       // Add to our in-memory applications array
       applications.push(newApplication);
       
+      // Return the application without the resumeFileContent to reduce response size
+      const { resumeFileContent, ...applicationWithoutResume } = newApplication;
+      
       return {
         statusCode: 201,
         headers,
-        body: JSON.stringify(newApplication)
+        body: JSON.stringify(applicationWithoutResume)
       };
     } catch (error) {
       console.error('Error creating application:', error);
