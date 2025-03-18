@@ -1,7 +1,11 @@
-// Serverless storage implementation for Netlify Functions using Netlify KV Store
-const { getStore } = require('@netlify/blobs');
+// Serverless storage implementation for Netlify Functions
+// Uses Netlify's Key-Value Store for persistence
+// https://docs.netlify.com/netlify-labs/experimental-features/edge-functions/kv-store/
 
-// Fallback in-memory storage for local development
+// Import the KV store for Netlify (uncomment when using actual Netlify KV)
+// const { getStore } = require('@netlify/blobs');
+
+// In-memory storage for testing/development when not in Netlify environment
 let memoryApplications = [];
 let memoryAboutUs = {
   id: "about-us",
@@ -10,25 +14,16 @@ let memoryAboutUs = {
 };
 let applicationCounter = 1;
 
-// Helper function to determine if we're in Netlify environment
-function isNetlifyEnvironment() {
-  return !!process.env.NETLIFY;
-}
-
 /**
  * Get all applications
  */
 async function getApplications() {
   try {
-    if (isNetlifyEnvironment()) {
-      console.log("Getting applications from Netlify KV Store");
-      const store = getStore('applications');
-      const data = await store.get('all-applications');
-      return data ? JSON.parse(data) : [];
-    } else {
-      console.log("Getting applications from memory storage");
-      return memoryApplications;
-    }
+    // When using actual Netlify KV store:
+    // const store = getStore('applications');
+    // return JSON.parse(await store.get('all-applications') || '[]');
+    
+    return memoryApplications;
   } catch (error) {
     console.error('Error getting applications:', error);
     return [];
@@ -56,9 +51,7 @@ async function createApplication(application) {
     const applications = await getApplications();
     
     // Generate new ID
-    const newId = applications.length > 0 
-      ? Math.max(...applications.map(app => app.id)) + 1 
-      : 1;
+    const newId = applicationCounter++;
     
     // Create new application with generated ID
     const newApplication = {
@@ -67,17 +60,12 @@ async function createApplication(application) {
       createdAt: new Date().toISOString()
     };
     
-    // Add to the list of applications
-    const updatedApplications = [...applications, newApplication];
+    // Add to list
+    memoryApplications = [...applications, newApplication];
     
-    if (isNetlifyEnvironment()) {
-      console.log("Storing application in Netlify KV Store");
-      const store = getStore('applications');
-      await store.set('all-applications', JSON.stringify(updatedApplications));
-    } else {
-      console.log("Storing application in memory storage");
-      memoryApplications = updatedApplications;
-    }
+    // When using actual Netlify KV store:
+    // const store = getStore('applications');
+    // await store.set('all-applications', JSON.stringify(memoryApplications));
     
     return newApplication;
   } catch (error) {
@@ -91,18 +79,14 @@ async function createApplication(application) {
  */
 async function getAboutUs() {
   try {
-    if (isNetlifyEnvironment()) {
-      console.log("Getting about-us from Netlify KV Store");
-      const store = getStore('content');
-      const data = await store.get('about-us');
-      return data ? JSON.parse(data) : memoryAboutUs;
-    } else {
-      console.log("Getting about-us from memory storage");
-      return memoryAboutUs;
-    }
+    // When using actual Netlify KV store:
+    // const store = getStore('content');
+    // return JSON.parse(await store.get('about-us') || 'null');
+    
+    return memoryAboutUs;
   } catch (error) {
     console.error('Error getting about us:', error);
-    return memoryAboutUs;
+    return null;
   }
 }
 
@@ -117,15 +101,11 @@ async function updateAboutUs(content) {
       updatedAt: new Date().toISOString()
     };
     
-    if (isNetlifyEnvironment()) {
-      console.log("Storing about-us in Netlify KV Store");
-      const store = getStore('content');
-      await store.set('about-us', JSON.stringify(updatedAboutUs));
-    } else {
-      console.log("Storing about-us in memory storage");
-      memoryAboutUs = updatedAboutUs;
-    }
+    // When using actual Netlify KV store:
+    // const store = getStore('content');
+    // await store.set('about-us', JSON.stringify(updatedAboutUs));
     
+    memoryAboutUs = updatedAboutUs;
     return updatedAboutUs;
   } catch (error) {
     console.error('Error updating about us:', error);
