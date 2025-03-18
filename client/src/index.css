@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    @apply antialiased bg-space-black text-foreground overflow-x-hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  button {
+    font-family: 'Exo 2', sans-serif;
+  }
+}
+
+@layer utilities {
+  .bg-space-black {
+    background-color: #121212;
+  }
+
+  .bg-deep-blue {
+    background-color: #0A1128;
+  }
+
+  .bg-cosmic-purple {
+    background-color: #6A0DAD;
+  }
+
+  .bg-satellite-blue {
+    background-color: #1E88E5;
+  }
+
+  .bg-stellar-yellow {
+    background-color: #FFC107;
+  }
+
+  .text-star-white {
+    color: #F8F9FA;
+  }
+
+  .text-satellite-blue {
+    color: #1E88E5;
+  }
+
+  .text-stellar-yellow {
+    color: #FFC107;
+  }
+
+  .text-cosmic-purple {
+    color: #6A0DAD;
+  }
+
+  .border-satellite-blue {
+    border-color: #1E88E5;
+  }
+
+  .border-stellar-yellow {
+    border-color: #FFC107;
+  }
+
+  .hover-satellite-blue:hover {
+    background-color: #1E88E5;
+  }
+
+  .hover-stellar-yellow:hover {
+    background-color: #FFC107;
+  }
+}
+
+.star {
+  position: absolute;
+  background-color: white;
+  border-radius: 50%;
+  animation: twinkle 2s infinite alternate;
+}
+
+@keyframes twinkle {
+  0% { opacity: 0.2; }
+  100% { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.department-item {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.department-item:hover {
+  transform: scale(1.05);
+}
+
+.page-transition {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.page-transition.active {
+  opacity: 1;
+}
