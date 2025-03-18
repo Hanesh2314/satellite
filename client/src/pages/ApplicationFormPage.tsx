@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'wouter';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -57,7 +57,7 @@ export default function ApplicationFormPage() {
     const reader = new FileReader();
     reader.onload = (e) => {
       // Get the base64 string (remove metadata prefix)
-      const base64String = e.target.result?.toString().split(',')[1] || '';
+      const base64String = e.target?.result?.toString().split(',')[1] || '';
       
       // Store the file content and type
       setResumeFile({
