@@ -26,26 +26,12 @@ exports.handler = async (event, context) => {
   try {
     // GET /api/applications - Return all applications
     if (event.httpMethod === 'GET' && (event.path === '/.netlify/functions/applications' || event.path === '/api/applications')) {
-      // For debugging, return a test response
-      const testData = [
-        {
-          id: 1,
-          name: "Test Applicant",
-          contactInfo: "test@example.com",
-          department: "Engineering",
-          branch: "Aerospace",
-          year: "3",
-          experience: "Sample experience",
-          resumeFileName: "resume.pdf"
-        }
-      ];
-      
-      console.log("Returning applications data:", testData);
+      const applications = await getApplications();
       
       return {
         statusCode: 200,
         headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify(testData)
+        body: JSON.stringify(applications)
       };
     }
     
@@ -71,7 +57,7 @@ exports.handler = async (event, context) => {
     
     // POST /api/applications - Create new application
     if (event.httpMethod === 'POST' && (event.path === '/.netlify/functions/applications' || event.path === '/api/applications')) {
-      console.log("Received application submission:", event.body);
+      console.log("Received application submission");
       
       const data = JSON.parse(event.body);
       
@@ -84,15 +70,12 @@ exports.handler = async (event, context) => {
         };
       }
       
-      // For debugging, just acknowledge receipt
+      const newApplication = await createApplication(data);
+      
       return {
         statusCode: 201,
         headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: Math.floor(Math.random() * 1000) + 1,
-          ...data,
-          createdAt: new Date().toISOString()
-        })
+        body: JSON.stringify(newApplication)
       };
     }
     
