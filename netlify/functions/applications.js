@@ -4,6 +4,8 @@
 let applications = [];
 
 exports.handler = async function(event, context) {
+  console.log("Function invoked:", event.path, event.httpMethod);
+  
   // CORS headers for all responses
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -13,6 +15,7 @@ exports.handler = async function(event, context) {
 
   // Handle OPTIONS request (CORS preflight)
   if (event.httpMethod === 'OPTIONS') {
+    console.log("Handling OPTIONS request");
     return {
       statusCode: 200,
       headers,
@@ -22,10 +25,15 @@ exports.handler = async function(event, context) {
 
   // GET: Retrieve all applications
   if (event.httpMethod === 'GET' && event.path === '/.netlify/functions/applications') {
+    console.log("Getting all applications, count:", applications.length);
+    
     // Return applications without the resume file content to reduce response size
     const applicationsWithoutResumes = applications.map(app => {
       const { resumeFileContent, ...appWithoutResume } = app;
-      return appWithoutResume;
+      return {
+        ...appWithoutResume,
+        hasResume: !!app.resumeFileContent
+      };
     });
     
     return {
@@ -38,9 +46,12 @@ exports.handler = async function(event, context) {
   // GET: Retrieve a specific application by ID
   if (event.httpMethod === 'GET' && event.path.match(/\/.netlify\/functions\/applications\/\d+$/)) {
     const id = parseInt(event.path.split('/').pop());
+    console.log("Getting application by ID:", id);
+    
     const application = applications.find(app => app.id === id);
     
     if (!application) {
+      console.log("Application not found:", id);
       return {
         statusCode: 404,
         headers,
@@ -54,17 +65,23 @@ exports.handler = async function(event, context) {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(applicationWithoutResume)
+      body: JSON.stringify({
+        ...applicationWithoutResume,
+        hasResume: !!application.resumeFileContent
+      })
     };
   }
   
   // GET: Retrieve a specific application's resume by ID
   if (event.httpMethod === 'GET' && event.path.match(/\/.netlify\/functions\/applications\/\d+\/resume$/)) {
     const id = parseInt(event.path.split('/').slice(-2, -1)[0]);
+    console.log("Getting resume for application ID:", id);
+    
     const application = applications.find(app => app.id === id);
     
     // Check if application exists and has resume content
     if (!application || !application.resumeFileContent) {
+      console.log("Resume not found for ID:", id);
       return {
         statusCode: 404,
         headers: {
@@ -95,6 +112,7 @@ exports.handler = async function(event, context) {
   // POST: Create a new application
   if (event.httpMethod === 'POST' && event.path === '/.netlify/functions/applications') {
     try {
+      console.log("Creating new application");
       const data = JSON.parse(event.body);
       
       // Generate a unique ID
@@ -126,6 +144,7 @@ exports.handler = async function(event, context) {
       
       // Add to our in-memory applications array
       applications.push(newApplication);
+      console.log("Added application:", id);
       
       // Return the application without the resumeFileContent to reduce response size
       const { resumeFileContent, ...applicationWithoutResume } = newApplication;
@@ -149,10 +168,29 @@ exports.handler = async function(event, context) {
     }
   }
   
+  // Add a test endpoint to check if the function is responding
+  if (event.httpMethod === 'GET' && event.path === '/.netlify/functions/applications/test') {
+    console.log("Test endpoint called");
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ 
+        message: 'API is working',
+        timestamp: new Date().toISOString(),
+        applicationsCount: applications.length
+      })
+    };
+  }
+  
   // Fallback for unhandled routes
+  console.log("Unhandled route:", event.path);
   return {
     statusCode: 404,
     headers,
-    body: JSON.stringify({ error: 'Not found' })
+    body: JSON.stringify({ 
+      error: 'Not found',
+      path: event.path,
+      method: event.httpMethod
+    })
   };
 };
