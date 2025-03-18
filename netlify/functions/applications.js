@@ -1,7 +1,7 @@
 // applications.js - Serverless function for handling application data
 
 // In-memory storage for applications
-const applications = [];
+let applications = [];
 
 exports.handler = async function(event, context) {
   // CORS headers for all responses
