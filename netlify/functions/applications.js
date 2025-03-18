@@ -1,98 +1,134 @@
-// Netlify Function for handling applications API
-const { getApplications, getApplicationById, createApplication } = require('./lib/storage');
+// applications.js - Serverless function for handling application data
 
-exports.handler = async (event, context) => {
-  // Set CORS headers
+// In-memory storage for applications (for demonstration purposes)
+let applications = [];
+
+exports.handler = async function(event, context) {
+  // CORS headers for all responses
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
   };
 
-  // Log request details for debugging
-  console.log('Applications function received request:', {
-    path: event.path,
-    httpMethod: event.httpMethod
-  });
-
   // Handle OPTIONS request (CORS preflight)
   if (event.httpMethod === 'OPTIONS') {
     return {
-      statusCode: 204,
-      headers
+      statusCode: 200,
+      headers,
+      body: ''
     };
   }
 
-  try {
-    // GET /api/applications - Return all applications
-    if (event.httpMethod === 'GET' && (event.path === '/.netlify/functions/applications' || event.path === '/api/applications')) {
-      const applications = await getApplications();
-      
+  // GET: Retrieve all applications
+  if (event.httpMethod === 'GET' && event.path === '/.netlify/functions/applications') {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(applications)
+    };
+  }
+  
+  // GET: Retrieve a specific application by ID
+  if (event.httpMethod === 'GET' && event.path.match(/\/.netlify\/functions\/applications\/\d+$/)) {
+    const id = parseInt(event.path.split('/').pop());
+    const application = applications.find(app => app.id === id);
+    
+    if (!application) {
       return {
-        statusCode: 200,
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify(applications)
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({ error: 'Application not found' })
       };
     }
     
-    // GET /api/applications/:id - Return specific application
-    if (event.httpMethod === 'GET' && (event.path.match(/\/.netlify\/functions\/applications\/\d+$/) || event.path.match(/\/api\/applications\/\d+$/))) {
-      const id = event.path.split('/').pop();
-      const application = await getApplicationById(id);
-      
-      if (!application) {
-        return {
-          statusCode: 404,
-          headers,
-          body: JSON.stringify({ error: 'Application not found' })
-        };
-      }
-      
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(application)
+    };
+  }
+  
+  // GET: Retrieve a specific application's resume by ID
+  if (event.httpMethod === 'GET' && event.path.match(/\/.netlify\/functions\/applications\/\d+\/resume$/)) {
+    const id = parseInt(event.path.split('/').slice(-2, -1)[0]);
+    const application = applications.find(app => app.id === id);
+    
+    if (!application || !application.resumeFileContent) {
       return {
-        statusCode: 200,
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify(application)
+        statusCode: 404,
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ error: 'Resume not found' })
       };
     }
     
-    // POST /api/applications - Create new application
-    if (event.httpMethod === 'POST' && (event.path === '/.netlify/functions/applications' || event.path === '/api/applications')) {
-      console.log("Received application submission");
-      
+    // Return the resume file as base64-encoded data
+    return {
+      statusCode: 200,
+      headers: {
+        ...headers,
+        'Content-Type': application.resumeFileType || 'application/octet-stream',
+        'Content-Disposition': `attachment; filename="${application.resumeFileName}"`
+      },
+      body: application.resumeFileContent,
+      isBase64Encoded: true
+    };
+  }
+  
+  // POST: Create a new application
+  if (event.httpMethod === 'POST' && event.path === '/.netlify/functions/applications') {
+    try {
       const data = JSON.parse(event.body);
       
-      // Basic validation
-      if (!data.name || !data.department) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: 'Missing required fields' })
-        };
-      }
+      // Generate a unique ID (in a real app, this would be handled by the database)
+      const id = applications.length > 0 
+        ? Math.max(...applications.map(app => app.id)) + 1 
+        : 1;
       
-      const newApplication = await createApplication(data);
+      // Create the new application with current timestamp
+      const newApplication = {
+        id,
+        name: data.name,
+        contactInfo: data.contactInfo || '',
+        department: data.department,
+        branch: data.branch,
+        year: data.year,
+        experience: data.experience,
+        resumeFileName: data.resumeFileName || null,
+        resumeFileContent: data.resumeFileContent || null,
+        resumeFileType: data.resumeFileType || null,
+        createdAt: new Date().toISOString()
+      };
+      
+      // Add to our in-memory applications array
+      applications.push(newApplication);
       
       return {
         statusCode: 201,
-        headers: { ...headers, 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(newApplication)
       };
+    } catch (error) {
+      console.error('Error creating application:', error);
+      
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Invalid request data',
+          details: error.message
+        })
+      };
     }
-    
-    // Route not found
-    return {
-      statusCode: 404,
-      headers,
-      body: JSON.stringify({ error: 'Not found' })
-    };
-    
-  } catch (error) {
-    console.error('Error in applications function:', error);
-    
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Internal server error', details: error.message })
-    };
   }
+  
+  // Fallback for unhandled routes
+  return {
+    statusCode: 404,
+    headers,
+    body: JSON.stringify({ error: 'Not found' })
+  };
 };
