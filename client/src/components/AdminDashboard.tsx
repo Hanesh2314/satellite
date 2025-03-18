@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ApplicantDetailsModal from "@/components/ApplicantDetailsModal";
 import AboutUsEditor from "@/components/AboutUsEditor";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery } from "@tanstack/react-query";
-import { getYearDisplayText } from "@/lib/satelliteUtils";
 
 export interface Applicant {
   id: number;
@@ -22,113 +28,150 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
+  const [applications, setApplications] = useState<Applicant[]>([]);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  const { data: applicants = [], isLoading, error } = useQuery<Applicant[]>({
-    queryKey: ['/api/applications'],
-  });
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        console.log("Fetching applications...");
+        
+        // Direct fetch to debug issues
+        const response = await fetch('/api/applications');
+        console.log("API Response status:", response.status);
+        
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log("Applications data:", data);
+        
+        setApplications(data);
+      } catch (error) {
+        console.error("Error fetching applications:", error);
+        setError("Failed to load applications. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, []);
+
   const handleViewDetails = (applicant: Applicant) => {
     setSelectedApplicant(applicant);
     setIsModalOpen(true);
   };
-  
-  const closeModal = () => {
+
+  const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedApplicant(null);
   };
-  
+
   return (
-    <div className="w-full max-w-6xl">
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-star-white">Admin Dashboard</h2>
-        <Button 
-          onClick={onLogout}
-          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-        >
-          Logout
-        </Button>
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        <Button onClick={onLogout} variant="ghost">Logout</Button>
       </div>
-      
-      <Tabs defaultValue="applicants" className="mb-10">
-        <TabsList className="grid w-full grid-cols-2 bg-deep-blue">
-          <TabsTrigger value="applicants" className="text-lg">Applicants</TabsTrigger>
-          <TabsTrigger value="about" className="text-lg">About Us Content</TabsTrigger>
+
+      <Tabs defaultValue="applicants">
+        <TabsList className="mb-4">
+          <TabsTrigger value="applicants">Applicants</TabsTrigger>
+          <TabsTrigger value="about">About Us Content</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="applicants" className="mt-6">
-          <div className="bg-deep-blue bg-opacity-70 rounded-xl backdrop-filter backdrop-blur-lg border border-satellite-blue border-opacity-50 overflow-hidden">
-            <table className="w-full text-left">
-              <thead className="bg-space-black bg-opacity-70">
-                <tr>
-                  <th className="px-6 py-4 text-star-white">Name</th>
-                  <th className="px-6 py-4 text-star-white">Department</th>
-                  <th className="px-6 py-4 text-star-white">Year</th>
-                  <th className="px-6 py-4 text-star-white">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-400">
-                      <i className="fas fa-spinner fa-spin text-4xl mb-3 block"></i>
-                      Loading applicants...
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-red-400">
-                      <i className="fas fa-exclamation-circle text-4xl mb-3 block"></i>
-                      Error loading applicants
-                    </td>
-                  </tr>
-                ) : applicants.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-400">
-                      <i className="fas fa-user-astronaut text-4xl mb-3 block"></i>
-                      No applicants have joined the team yet.
-                    </td>
-                  </tr>
-                ) : (
-                  applicants.map((applicant) => (
-                    <tr 
-                      key={applicant.id}
-                      className="border-t border-satellite-blue border-opacity-30 hover:bg-deep-blue hover:bg-opacity-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-star-white">{applicant.name}</td>
-                      <td className="px-6 py-4 text-gray-300">{applicant.department}</td>
-                      <td className="px-6 py-4 text-gray-300">{getYearDisplayText(applicant.year)}</td>
-                      <td className="px-6 py-4">
-                        <button 
-                          className="text-satellite-blue hover:text-stellar-yellow transition-colors"
-                          onClick={() => handleViewDetails(applicant)}
+
+        <TabsContent value="applicants">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Applicants</h2>
+            
+            {isLoading && (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading applications...</p>
+              </div>
+            )}
+            
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 rounded mb-4">
+                <p>{error}</p>
+                <Button 
+                  className="mt-2" 
+                  variant="outline" 
+                  onClick={() => window.location.reload()}
+                >
+                  Retry
+                </Button>
+                <div className="mt-2 text-sm text-gray-600">
+                  <p>Debug information:</p>
+                  <ul className="list-disc ml-5 mt-1">
+                    <li>Check if your Netlify Functions are deployed correctly</li>
+                    <li>Verify the API endpoint redirects in netlify.toml</li>
+                    <li>Check the browser console for any error messages</li>
+                    <li>Review the Netlify Functions logs in the Netlify dashboard</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+            
+            {!isLoading && !error && applications.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p>No applications have been submitted yet.</p>
+              </div>
+            )}
+            
+            {!isLoading && !error && applications.length > 0 && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Year</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {applications.map((applicant) => (
+                    <TableRow key={applicant.id}>
+                      <TableCell className="font-medium">{applicant.name}</TableCell>
+                      <TableCell>{applicant.department}</TableCell>
+                      <TableCell>{applicant.year}</TableCell>
+                      <TableCell>
+                        <Button 
+                          onClick={() => handleViewDetails(applicant)} 
+                          variant="ghost" 
+                          size="sm"
                         >
-                          <i className="fas fa-external-link-alt mr-1"></i> View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </TabsContent>
-        
-        <TabsContent value="about" className="mt-6">
-          <div className="bg-deep-blue bg-opacity-70 rounded-xl backdrop-filter backdrop-blur-lg border border-satellite-blue border-opacity-50 p-6">
-            <h3 className="text-2xl font-bold text-stellar-yellow mb-4">Edit About Us Content</h3>
-            <p className="text-gray-300 mb-6">Update the About Us section that appears on the homepage.</p>
+
+        <TabsContent value="about">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">About Us Content</h2>
             <AboutUsEditor isAdmin={true} />
           </div>
         </TabsContent>
       </Tabs>
-      
-      {isModalOpen && selectedApplicant && (
-        <ApplicantDetailsModal 
-          applicant={selectedApplicant} 
-          isOpen={isModalOpen} 
-          onClose={closeModal} 
+
+      {selectedApplicant && (
+        <ApplicantDetailsModal
+          applicant={selectedApplicant}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
         />
       )}
     </div>
