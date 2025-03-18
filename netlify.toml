@@ -1,11 +1,19 @@
 [build]
   command = "npm run build"
   publish = "dist/public"
+  functions = "netlify/functions"
 
-[build.environment]
-  NODE_VERSION = "18"
+[dev]
+  command = "npm run dev"
+  port = 5000
+  publish = "dist/public"
+  functions = "netlify/functions"
 
-# Redirects for single-page application
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
