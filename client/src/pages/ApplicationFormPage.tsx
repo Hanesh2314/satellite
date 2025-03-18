@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useLocation, useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -129,8 +129,8 @@ export default function ApplicationFormPage() {
 
   return (
     <div className="container mx-auto py-10 max-w-3xl">
-      <h1 className="text-3xl font-bold mb-8 text-center text-primary">Job Application Form</h1>
-      <div className="bg-card p-6 rounded-lg shadow-lg">
+      <h1 className="text-3xl font-bold mb-8 text-center text-white">Job Application Form</h1>
+      <div className="bg-deep-blue border border-satellite-blue p-8 rounded-lg shadow-lg">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -138,9 +138,9 @@ export default function ApplicationFormPage() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel className="text-white">Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your full name" {...field} />
+                    <Input placeholder="Enter your full name" {...field} className="bg-black bg-opacity-50 text-white border-gray-700" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,11 +152,11 @@ export default function ApplicationFormPage() {
               name="contactInfo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Contact Information</FormLabel>
+                  <FormLabel className="text-white">Contact Information</FormLabel>
                   <FormControl>
-                    <Input placeholder="Email or phone number" {...field} />
+                    <Input placeholder="Email or phone number" {...field} className="bg-black bg-opacity-50 text-white border-gray-700" />
                   </FormControl>
-                  <FormDescription>We'll use this to contact you about your application.</FormDescription>
+                  <FormDescription className="text-gray-400">We'll use this to contact you about your application.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -167,14 +167,14 @@ export default function ApplicationFormPage() {
               name="department"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Department</FormLabel>
+                  <FormLabel className="text-white">Department</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-black bg-opacity-50 text-white border-gray-700">
                         <SelectValue placeholder="Select department" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="bg-deep-blue text-white border-gray-700">
                       {departments.map((dept) => (
                         <SelectItem key={dept.id} value={dept.id}>
                           {dept.name}
@@ -192,9 +192,9 @@ export default function ApplicationFormPage() {
               name="branch"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Branch/Major</FormLabel>
+                  <FormLabel className="text-white">Branch/Major</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Computer Science, Mechanical Engineering" {...field} />
+                    <Input placeholder="e.g., Computer Science, Mechanical Engineering" {...field} className="bg-black bg-opacity-50 text-white border-gray-700" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -206,14 +206,14 @@ export default function ApplicationFormPage() {
               name="year"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Year of Study/Graduation</FormLabel>
+                  <FormLabel className="text-white">Year of Study/Graduation</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-black bg-opacity-50 text-white border-gray-700">
                         <SelectValue placeholder="Select year" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="bg-deep-blue text-white border-gray-700">
                       {["1st", "2nd", "3rd", "4th", "Graduate"].map((year) => (
                         <SelectItem key={year} value={year}>
                           {getYearDisplayText(year)}
@@ -231,11 +231,11 @@ export default function ApplicationFormPage() {
               name="experience"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Relevant Experience</FormLabel>
+                  <FormLabel className="text-white">Relevant Experience</FormLabel>
                   <FormControl>
                     <Textarea 
                       placeholder="Describe your relevant experience, projects, or skills"
-                      className="min-h-[120px]"
+                      className="min-h-[120px] bg-black bg-opacity-50 text-white border-gray-700"
                       {...field}
                     />
                   </FormControl>
@@ -249,7 +249,7 @@ export default function ApplicationFormPage() {
               name="resumeFileName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Resume/CV</FormLabel>
+                  <FormLabel className="text-white">Resume/CV</FormLabel>
                   <div className="flex items-center gap-3">
                     <input
                       type="file"
@@ -268,16 +268,17 @@ export default function ApplicationFormPage() {
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
+                      className="text-white border-gray-400 hover:bg-satellite-blue"
                     >
                       {isUploading ? 'Uploading...' : 'Upload Resume'}
                     </Button>
                     {field.value && (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-white">
                         {field.value}
                       </span>
                     )}
                   </div>
-                  <FormDescription>Upload your resume in PDF, DOC, or DOCX format.</FormDescription>
+                  <FormDescription className="text-gray-400">Upload your resume in PDF, DOC, or DOCX format.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -285,7 +286,7 @@ export default function ApplicationFormPage() {
 
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full bg-satellite-blue hover:bg-stellar-yellow text-white hover:text-deep-blue" 
               disabled={isSubmitting || isUploading}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Application'}
