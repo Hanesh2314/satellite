@@ -11,7 +11,8 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { getDepartmentById } from "@/lib/satelliteUtils";
 import { useCustomToast } from "@/hooks/useToast";
 import { apiRequest } from "@/lib/queryClient";
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { CheckCircle } from "lucide-react";
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   contactInfo: z.string().min(5, "Contact information is required")
@@ -30,9 +31,67 @@ const formSchema = z.object({
   department: z.string().min(1, "Department is required"),
   resumeFileName: z.string().optional()
 });
-
+// ThankYouPopup Component (inline)
+const ThankYouPopup = ({ 
+  isOpen, 
+  onClose, 
+  redirectDelay = 5 
+}) => {
+  const [, navigate] = useLocation();
+  const [timeLeft, setTimeLeft] = useState(redirectDelay);
+  // Set up countdown timer when popup is open
+  useEffect(() => {
+    if (!isOpen) return;
+    setTimeLeft(redirectDelay);
+    
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          onClose();
+          navigate("/");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, navigate, onClose, redirectDelay]);
+  // Handle immediate redirect
+  const handleGoHome = () => {
+    onClose();
+    navigate("/");
+  };
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="flex justify-center mb-4">
+            <CheckCircle className="h-16 w-16 text-success" />
+          </div>
+          <DialogTitle className="text-xl text-center">Application Submitted!</DialogTitle>
+          <DialogDescription className="text-center">
+            Thank you for your interest in SpaceTechHub. Your application has been
+            received and is being processed.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4 text-center">
+          <p>We appreciate your interest in joining our team.</p>
+          <p>You will be contacted if your profile matches our requirements.</p>
+          <p className="text-sm text-muted-foreground">
+            Redirecting to home page in {timeLeft} seconds...
+          </p>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleGoHome} className="w-full">
+            Return to Home Page
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 type FormValues = z.infer<typeof formSchema>;
-
 const ApplicationFormPage = () => {
   const { department } = useParams<{ department: string }>();
   const [, navigate] = useLocation();
@@ -40,9 +99,9 @@ const ApplicationFormPage = () => {
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [showThankYou, setShowThankYou] = useState(false);
   
   const departmentInfo = getDepartmentById(department);
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -55,13 +114,11 @@ const ApplicationFormPage = () => {
       resumeFileName: ""
     }
   });
-
   useEffect(() => {
     if (!departmentInfo) {
       navigate("/departments");
     }
   }, [departmentInfo, navigate]);
-
   const onSubmit = async (data: FormValues) => {
     try {
       // Create a FormData object to handle the file
@@ -86,16 +143,18 @@ const ApplicationFormPage = () => {
       setSelectedFileName(null);
       setResumeFile(null);
       
-      // Redirect to home page after a delay
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
+      // Show thank you popup instead of timeout redirect
+      setShowThankYou(true);
+      
     } catch (error) {
       console.error("Error submitting application:", error);
       showToast("Failed to submit application. Please try again.", "error");
     }
   };
-
+  
+  const handleCloseThankYou = () => {
+    setShowThankYou(false);
+  };
   const handleFileSelect = (file: File) => {
     if (file) {
       setSelectedFileName(file.name);
@@ -103,16 +162,13 @@ const ApplicationFormPage = () => {
       form.setValue("resumeFileName", file.name);
     }
   };
-
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
-
   const handleDragLeave = () => {
     setIsDragging(false);
   };
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -122,14 +178,12 @@ const ApplicationFormPage = () => {
       handleFileSelect(file);
     }
   };
-
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       handleFileSelect(file);
     }
   };
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen relative z-10 px-4 py-12 page-transition active">
       <div className="text-center mb-8">
@@ -140,7 +194,6 @@ const ApplicationFormPage = () => {
           </p>
         )}
       </div>
-
       <div className="w-full max-w-2xl bg-deep-blue bg-opacity-70 p-8 rounded-xl backdrop-filter backdrop-blur-lg border border-satellite-blue border-opacity-50">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -161,7 +214,6 @@ const ApplicationFormPage = () => {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="contactInfo"
@@ -182,7 +234,6 @@ const ApplicationFormPage = () => {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="branch"
@@ -200,7 +251,6 @@ const ApplicationFormPage = () => {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="year"
@@ -225,7 +275,6 @@ const ApplicationFormPage = () => {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="experience"
@@ -244,7 +293,6 @@ const ApplicationFormPage = () => {
                 </FormItem>
               )}
             />
-
             <div className="space-y-3">
               <label className="block text-star-white text-lg font-bold">Resume Upload</label>
               <div
@@ -273,14 +321,12 @@ const ApplicationFormPage = () => {
                 />
               </div>
             </div>
-
             <input
               type="hidden"
               name="department"
               value={department}
               {...form.register("department")}
             />
-
             <div className="flex justify-center pt-4">
               <Button
                 type="submit"
@@ -293,8 +339,14 @@ const ApplicationFormPage = () => {
           </form>
         </Form>
       </div>
+      
+      {/* Thank You Popup */}
+      <ThankYouPopup 
+        isOpen={showThankYou} 
+        onClose={handleCloseThankYou} 
+        redirectDelay={5} 
+      />
     </div>
   );
 };
-
 export default ApplicationFormPage;
