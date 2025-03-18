@@ -1,54 +1,21 @@
 {
-  "name": "SpaceTechHub",
-  "themes": [
-    {
-      "name": "default",
-      "label": "Default",
-      "activeColorMode": "dark",
-      "colorMode": {
-        "light": {
-          "background": "hsl(0, 0%, 100%)",
-          "foreground": "hsl(0, 0%, 3.9%)",
-          "card": "hsl(0, 0%, 100%)",
-          "card-foreground": "hsl(0, 0%, 3.9%)",
-          "popover": "hsl(0, 0%, 100%)",
-          "popover-foreground": "hsl(0, 0%, 3.9%)",
-          "primary": "hsl(43, 91%, 68%)",
-          "primary-foreground": "hsl(221, 39%, 11%)",
-          "secondary": "hsl(221, 39%, 11%)",
-          "secondary-foreground": "hsl(0, 0%, 98%)",
-          "muted": "hsl(0, 0%, 96.1%)",
-          "muted-foreground": "hsl(0, 0%, 45.1%)",
-          "accent": "hsl(0, 0%, 96.1%)",
-          "accent-foreground": "hsl(0, 0%, 9%)",
-          "destructive": "hsl(0, 84.2%, 60.2%)",
-          "destructive-foreground": "hsl(0, 0%, 98%)",
-          "border": "hsl(0, 0%, 89.8%)",
-          "input": "hsl(0, 0%, 89.8%)",
-          "ring": "hsl(0, 0%, 3.9%)"
-        },
-        "dark": {
-          "background": "hsl(221, 39%, 11%)",
-          "foreground": "hsl(0, 0%, 98%)",
-          "card": "hsl(221, 39%, 15%)",
-          "card-foreground": "hsl(0, 0%, 98%)",
-          "popover": "hsl(221, 39%, 15%)",
-          "popover-foreground": "hsl(0, 0%, 98%)",
-          "primary": "hsl(43, 91%, 68%)",
-          "primary-foreground": "hsl(221, 39%, 11%)",
-          "secondary": "hsl(221, 73%, 22%)",
-          "secondary-foreground": "hsl(0, 0%, 98%)",
-          "muted": "hsl(221, 39%, 20%)",
-          "muted-foreground": "hsl(0, 0%, 63.9%)",
-          "accent": "hsl(221, 39%, 20%)",
-          "accent-foreground": "hsl(0, 0%, 98%)",
-          "destructive": "hsl(0, 84.2%, 60.2%)",
-          "destructive-foreground": "hsl(0, 0%, 98%)",
-          "border": "hsl(221, 39%, 20%)",
-          "input": "hsl(221, 39%, 20%)",
-          "ring": "hsl(43, 91%, 68%)"
-        }
-      }
-    }
-  ]
+  "primary": "#F6D860",
+  "background": "#101c33",
+  "foreground": "#fafafa",
+  "card": "#1a2843",
+  "card-foreground": "#fafafa",
+  "popover": "#1a2843",
+  "popover-foreground": "#fafafa",
+  "primary-foreground": "#101c33",
+  "secondary": "#19376D",
+  "secondary-foreground": "#fafafa",
+  "muted": "#1a2843",
+  "muted-foreground": "#a3a3a3",
+  "accent": "#1a2843",
+  "accent-foreground": "#fafafa",
+  "destructive": "#ef4444",
+  "destructive-foreground": "#fafafa",
+  "border": "#1a2843",
+  "input": "#1a2843",
+  "ring": "#F6D860"
 }
